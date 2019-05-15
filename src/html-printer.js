@@ -27,6 +27,20 @@
     var fileListPrinter = new FileListPrinter(config);
     return fileListPrinter.generateFileList(diffJson);
   };
+  
+  /*
+   * ZC-IMPL
+   * Generates context line html based on the view in config
+   */
+  HtmlPrinter.prototype.getContextLinesHtml = function(diffJson, config) {
+    if(config.outputFormat === "side-by-side") {
+        var sideBySidePrinter = new SideBySidePrinter(config);
+        return sideBySidePrinter.getContextLinesHtml(diffJson);
+    } else {
+        var lineByLinePrinter = new LineByLinePrinter(config);
+        return lineByLinePrinter.getContextLinesHtml(diffJson);
+    }
+  };
 
   module.exports.HtmlPrinter = new HtmlPrinter();
 })();

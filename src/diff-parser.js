@@ -21,6 +21,28 @@
   }
 
   DiffParser.prototype.LINE_TYPE = LINE_TYPE;
+  
+  /*
+   * ZC-IMPL
+   * Parse the given diff string and returns a JSON
+   */
+  DiffParser.prototype.getContextLinesJson = function(diffInput, oldNumberStart, newNumberStart) {
+      //Split the string into lines
+      var diffLinesArray = diffInput.replace(/\\ No newline at end of file/g, '')
+                                    .replace(/\r\n?/g, '\n')
+                                    .split('\n');
+      var diffLines = [];
+      //Assign line numbers
+      diffLinesArray.forEach(function(line) {
+          var lineObj = {
+              content: line,
+              oldNumber: oldNumberStart++,
+              newNumber: newNumberStart++
+          };
+          diffLines.push(lineObj);
+      });
+      return diffLines;
+  };
 
   DiffParser.prototype.generateDiffJson = function(diffInput, configuration) {
     var config = configuration || {};

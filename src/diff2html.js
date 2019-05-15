@@ -56,6 +56,22 @@
 
     return fileList + diffOutput;
   };
+  
+  /*
+   * ZC-IMPL
+   * Generates json object for context lines string input
+   */
+  Diff2Html.prototype.getContextLinesJson = function(diffInput, oldNumber, newNumber) {
+    return diffParser.getContextLinesJson(diffInput, oldNumber, newNumber);
+  };
+  
+  /*
+   * ZC-IMPL
+   * Generates html based on the given JSON
+   */
+  Diff2Html.prototype.getContextLinesHtml = function(diffJson, cfg) {
+    return htmlPrinter.getContextLinesHtml(diffJson, cfg);
+  };
 
   /*
    * Deprecated methods - The following methods exist only to maintain compatibility with previous versions

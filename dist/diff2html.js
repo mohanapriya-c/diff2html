@@ -4624,6 +4624,28 @@ module.exports = merge;
   }
 
   DiffParser.prototype.LINE_TYPE = LINE_TYPE;
+  
+  /*
+   * ZC-IMPL
+   * Parse the given diff string and returns a JSON
+   */
+  DiffParser.prototype.getContextLinesJson = function(diffInput, oldNumberStart, newNumberStart) {
+      //Split the string into lines
+      var diffLinesArray = diffInput.replace(/\\ No newline at end of file/g, '')
+                                    .replace(/\r\n?/g, '\n')
+                                    .split('\n');
+      var diffLines = [];
+      //Assign line numbers
+      diffLinesArray.forEach(function(line) {
+          var lineObj = {
+              content: line,
+              oldNumber: oldNumberStart++,
+              newNumber: newNumberStart++
+          };
+          diffLines.push(lineObj);
+      });
+      return diffLines;
+  };
 
   DiffParser.prototype.generateDiffJson = function(diffInput, configuration) {
     var config = configuration || {};
@@ -5107,6 +5129,22 @@ module.exports = merge;
 
     return fileList + diffOutput;
   };
+  
+  /*
+   * ZC-IMPL
+   * Generates json object for context lines string input
+   */
+  Diff2Html.prototype.getContextLinesJson = function(diffInput, oldNumber, newNumber) {
+    return diffParser.getContextLinesJson(diffInput, oldNumber, newNumber);
+  };
+  
+  /*
+   * ZC-IMPL
+   * Generates html based on the given JSON
+   */
+  Diff2Html.prototype.getContextLinesHtml = function(diffJson, cfg) {
+    return htmlPrinter.getContextLinesHtml(diffJson, cfg);
+  };
 
   /*
    * Deprecated methods - The following methods exist only to maintain compatibility with previous versions
@@ -5332,6 +5370,20 @@ module.exports = merge;
     var fileListPrinter = new FileListPrinter(config);
     return fileListPrinter.generateFileList(diffJson);
   };
+  
+  /*
+   * ZC-IMPL
+   * Generates context line html based on the view in config
+   */
+  HtmlPrinter.prototype.getContextLinesHtml = function(diffJson, config) {
+    if(config.outputFormat === "side-by-side") {
+        var sideBySidePrinter = new SideBySidePrinter(config);
+        return sideBySidePrinter.getContextLinesHtml(diffJson);
+    } else {
+        var lineByLinePrinter = new LineByLinePrinter(config);
+        return lineByLinePrinter.getContextLinesHtml(diffJson);
+    }
+  };
 
   module.exports.HtmlPrinter = new HtmlPrinter();
 })();
@@ -5412,22 +5464,47 @@ module.exports = merge;
     return Rematch.distance(amod, bmod);
   });
 
-  LineByLinePrinter.prototype.makeColumnLineNumberHtml = function(block) {
+  /*
+   * ZC-IMPL
+   * Generate line by line html for the given context lines
+   */
+  LineByLinePrinter.prototype.getContextLinesHtml = function(lines) {
+      var that = this;
+      var linesHtml = "";
+      lines.forEach(function(line) {
+        var escapedLine = utils.escape(line.content);
+        linesHtml += that.makeLineHtml(that.config.isCombined, diffParser.LINE_TYPE.CONTEXT, line.oldNumber, line.newNumber, escapedLine);          
+      });
+      return linesHtml;
+  };
+
+  LineByLinePrinter.prototype.makeColumnLineNumberHtml = function(block, appendNext, prevOldLine, prevNewLine) {
     return hoganUtils.render(genericTemplatesPath, 'column-line-number', {
       diffParser: diffParser,
-      blockHeader: utils.escape(block.header),
+      blockHeader: (block) ? utils.escape(block.header) : '',
       lineClass: 'd2h-code-linenumber',
-      contentClass: 'd2h-code-line'
+      contentClass: 'd2h-code-line',
+      appendNext: appendNext,
+      prevOldLine: prevOldLine,
+      prevNewLine: prevNewLine
     });
   };
 
   LineByLinePrinter.prototype._generateFileHtml = function(file) {
     var that = this;
-    return file.blocks.map(function(block) {
-      var lines = that.makeColumnLineNumberHtml(block);
+    var prevOldLine;
+    var prevNewLine;
+    return file.blocks.map(function(block, blockIndex) {
+      var lines = "";
       var oldLines = [];
       var newLines = [];
-
+      
+      if(parseInt(block.oldStartLine) !== 1) {
+          lines = that.makeColumnLineNumberHtml(block, false, prevOldLine, prevNewLine);
+      }
+      
+      prevOldLine = null;
+      prevNewLine = null;
       function processChangeBlock() {
         var matches;
         var insertType;
@@ -5492,6 +5569,10 @@ module.exports = merge;
 
         if (line.type === diffParser.LINE_TYPE.CONTEXT) {
           lines += that.makeLineHtml(file.isCombined, line.type, line.oldNumber, line.newNumber, escapedLine);
+          if(file.blocks[file.blocks.length] === blockIndex) {
+            prevOldLine = line.oldNumber;
+            prevNewLine = line.newNumber;
+          }
         } else if (line.type === diffParser.LINE_TYPE.INSERTS && !oldLines.length) {
           lines += that.makeLineHtml(file.isCombined, line.type, line.oldNumber, line.newNumber, escapedLine);
         } else if (line.type === diffParser.LINE_TYPE.DELETES) {
@@ -5505,7 +5586,7 @@ module.exports = merge;
       }
 
       processChangeBlock();
-
+      lines += that.makeColumnLineNumberHtml('', true, prevOldLine, prevNewLine);
       return lines;
     }).join('\n');
   };
@@ -6034,16 +6115,20 @@ module.exports = merge;
     return hoganUtils.render(genericTemplatesPath, 'wrapper', {'content': content});
   };
 
-  SideBySidePrinter.prototype.makeSideHtml = function(blockHeader) {
+  
+  SideBySidePrinter.prototype.makeSideHtml = function(blockHeader, appendNext, prevOldLine, prevNewLine) {
     return hoganUtils.render(genericTemplatesPath, 'column-line-number', {
       diffParser: diffParser,
       blockHeader: utils.escape(blockHeader),
       lineClass: 'd2h-code-side-linenumber',
-      contentClass: 'd2h-code-side-line'
+      contentClass: 'd2h-code-side-line',
+      appendNext: appendNext,
+      prevOldLine: prevOldLine,
+      prevNewLine: prevNewLine
     });
   };
 
-  SideBySidePrinter.prototype.makeWrappedSideHtml = function(left, right) {
+  SideBySidePrinter.prototype.makeWrappedSideHtml = function(left, right, appendNext, prevOldLine, prevNewLine) {
     return hoganUtils.render(wrappedTemplatesPath, 'column-line-number', {
       left: {
         diffParser: diffParser,
@@ -6056,14 +6141,51 @@ module.exports = merge;
         blockHeader: utils.escape(right.content),
         lineClass: 'd2h-wrapped-code-side-linenumber',
         contentClass: 'd2h-wrapped-code-side-line'
-      }
+      },
+      appendNext: appendNext,
+      prevOldLine: prevOldLine,
+      prevNewLine: prevNewLine
     });
   };
-
+  
+  /*
+   * ZC-IMPL
+   * Get side by side html for context lines given
+   */
+  SideBySidePrinter.prototype.getContextLinesHtml = function(lines) {
+      var that = this;
+      var lineFolding = that.config.lineFolding;
+      var linesHtml = "";
+      lines.forEach(function(line) {
+        var escapedLine = utils.escape(line.content);
+        if (lineFolding) {
+            linesHtml += that.generateWrappedSingleLineHtml({
+              isCombined: that.config.isCombined,
+              type: diffParser.LINE_TYPE.CONTEXT,
+              number: line.oldNumber,
+              content: escapedLine,
+              possiblePrefix: ' '
+            }, {
+              isCombined: that.config.isCombined,
+              type: diffParser.LINE_TYPE.CONTEXT,
+              number: line.newNumber,
+              content: escapedLine,
+              possiblePrefix: ' '
+            });
+          } else {
+            linesHtml.left += that.generateSingleLineHtml(that.config.isCombined, diffParser.LINE_TYPE.CONTEXT, line.oldNumber, escapedLine, ' ');
+            linesHtml.right += that.generateSingleLineHtml(that.config.isCombined, diffParser.LINE_TYPE.CONTEXT, line.newNumber, escapedLine, ' ');
+          }        
+      });
+      return linesHtml;
+  };
+  
   SideBySidePrinter.prototype.generateSideBySideFileHtml = function(file) {
     var that = this;
     var fileHtml = {};
     var lineFolding = that.config.lineFolding;
+    var prevOldLine = null;
+    var prevNewLine = null;
     if (lineFolding) {
       fileHtml = '';
     } else {
@@ -6072,13 +6194,17 @@ module.exports = merge;
     }
 
     file.blocks.forEach(function(block) {
-      if (lineFolding) {
-        fileHtml += that.makeWrappedSideHtml({ content: block.header }, { content: "" });
-      } else {
-        fileHtml.left += that.makeSideHtml(block.header);
-        fileHtml.right += that.makeSideHtml('');
+      if(parseInt(block.oldStartLine) !== 1) {
+          if (lineFolding) {
+            fileHtml += that.makeWrappedSideHtml({ content: block.header }, { content: "" }, false, prevOldLine, prevNewLine);
+          } else {
+            fileHtml.left += that.makeSideHtml(block.header, false, prevOldLine, prevNewLine);
+            fileHtml.right += that.makeSideHtml('', false, prevOldLine, prevNewLine);
+          }
       }
-
+      
+      prevOldLine = null;
+      prevNewLine = null;
       var oldLines = [];
       var newLines = [];
 
@@ -6188,6 +6314,8 @@ module.exports = merge;
             fileHtml.left += that.generateSingleLineHtml(file.isCombined, line.type, line.oldNumber, escapedLine, prefix);
             fileHtml.right += that.generateSingleLineHtml(file.isCombined, line.type, line.newNumber, escapedLine, prefix);
           }
+          prevOldLine = line.oldNumber;
+          prevNewLine = line.newNumber;
         } else if (line.type === diffParser.LINE_TYPE.INSERTS && !oldLines.length) {
           if (lineFolding) {
             fileHtml += that.generateWrappedSingleLineHtml({
@@ -6207,6 +6335,8 @@ module.exports = merge;
             fileHtml.left += that.generateSingleLineHtml(file.isCombined, diffParser.LINE_TYPE.CONTEXT, '', '', '');
             fileHtml.right += that.generateSingleLineHtml(file.isCombined, line.type, line.newNumber, escapedLine, prefix);
           }
+          prevOldLine = line.oldNumber;
+          prevNewLine = line.newNumber;
         } else if (line.type === diffParser.LINE_TYPE.DELETES) {
           oldLines.push(line);
         } else if (line.type === diffParser.LINE_TYPE.INSERTS && Boolean(oldLines.length)) {
@@ -6219,7 +6349,13 @@ module.exports = merge;
 
       processChangeBlock();
     });
-
+    
+    if (lineFolding) {
+        fileHtml += that.makeWrappedSideHtml({ content: '' }, { content: '' }, true, prevOldLine, prevNewLine);
+    } else {
+        fileHtml.left += that.makeSideHtml('', true, prevOldLine, prevNewLine);
+        fileHtml.right += that.makeSideHtml('', true, prevOldLine, prevNewLine);
+    }
     return fileHtml;
   };
 
@@ -6396,7 +6532,7 @@ module.exports = merge;
 if (!!!global.browserTemplates) global.browserTemplates = {};
 var Hogan = require("hogan.js");global.browserTemplates["file-summary-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<li class=\"d2h-file-list-line\">");t.b("\n" + i);t.b("    <span class=\"d2h-file-name-wrapper\">");t.b("\n" + i);t.b(t.rp("<fileIcon0",c,p,"      "));t.b("      <a href=\"#");t.b(t.v(t.f("fileHtmlId",c,p,0)));t.b("\" class=\"d2h-file-name\">");t.b(t.v(t.f("fileName",c,p,0)));t.b("</a>");t.b("\n" + i);t.b("      <span class=\"d2h-file-stats\">");t.b("\n" + i);t.b("          <span class=\"d2h-lines-added\">");t.b(t.v(t.f("addedLines",c,p,0)));t.b("</span>");t.b("\n" + i);t.b("          <span class=\"d2h-lines-deleted\">");t.b(t.v(t.f("deletedLines",c,p,0)));t.b("</span>");t.b("\n" + i);t.b("      </span>");t.b("\n" + i);t.b("    </span>");t.b("\n" + i);t.b("</li>");return t.fl(); },partials: {"<fileIcon0":{name:"fileIcon", partials: {}, subs: {  }}}, subs: {  }});
 global.browserTemplates["file-summary-wrapper"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<div class=\"d2h-file-list-wrapper\">");t.b("\n" + i);t.b("    <div class=\"d2h-file-list-header\">");t.b("\n" + i);t.b("        <span class=\"d2h-file-list-title\">Files changed (");t.b(t.v(t.f("filesNumber",c,p,0)));t.b(")</span>");t.b("\n" + i);t.b("        <a class=\"d2h-file-switch d2h-hide\">hide</a>");t.b("\n" + i);t.b("        <a class=\"d2h-file-switch d2h-show\">show</a>");t.b("\n" + i);t.b("    </div>");t.b("\n" + i);t.b("    <ol class=\"d2h-file-list\">");t.b("\n" + i);t.b("    ");t.b(t.t(t.f("files",c,p,0)));t.b("\n" + i);t.b("    </ol>");t.b("\n" + i);t.b("</div>");return t.fl(); },partials: {}, subs: {  }});
-global.browserTemplates["generic-column-line-number"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\" data-oldnumber=\"");t.b(t.v(t.f("oldNumber",c,p,0)));t.b("\" data-newnumber=\"");t.b(t.v(t.f("newNumber",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        ");t.b(t.v(t.f("content",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.f("blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
+global.browserTemplates["generic-column-line-number"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\" data-appendnext=");t.b(t.v(t.f("appendNext",c,p,0)));t.b(" data-prevoldline=");t.b(t.v(t.f("prevOldLine",c,p,0)));t.b(" data-prevnewline=");t.b(t.v(t.f("prevNewLine",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        ");t.b(t.v(t.f("content",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.f("blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["generic-empty-diff"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("            File without changes");t.b("\n" + i);t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["generic-file-path"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<span class=\"d2h-file-name-wrapper\">");t.b("\n" + i);t.b(t.rp("<fileIcon0",c,p,"    "));t.b("    <span class=\"d2h-file-name\">");t.b(t.v(t.f("fileDiffName",c,p,0)));t.b("</span>");t.b("\n" + i);t.b(t.rp("<fileTag1",c,p,"    "));t.b("</span>");return t.fl(); },partials: {"<fileIcon0":{name:"fileIcon", partials: {}, subs: {  }},"<fileTag1":{name:"fileTag", partials: {}, subs: {  }}}, subs: {  }});
 global.browserTemplates["generic-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("      ");t.b(t.t(t.f("lineNumber",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);if(t.s(t.f("prefix",c,p,1),c,p,0,171,247,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-prefix\">");t.b(t.t(t.f("prefix",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}if(t.s(t.f("content",c,p,1),c,p,0,279,353,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-ctn\">");t.b(t.t(t.f("content",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
@@ -6414,7 +6550,7 @@ global.browserTemplates["tag-file-added"] = new Hogan.Template({code: function (
 global.browserTemplates["tag-file-changed"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<span class=\"d2h-tag d2h-changed d2h-changed-tag\">CHANGED</span>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["tag-file-deleted"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<span class=\"d2h-tag d2h-deleted d2h-deleted-tag\">DELETED</span>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["tag-file-renamed"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<span class=\"d2h-tag d2h-moved d2h-moved-tag\">RENAMED</span>");return t.fl(); },partials: {}, subs: {  }});
-global.browserTemplates["wrapped-column-line-number"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr data-oldnumber=\"");t.b(t.v(t.f("oldNumber",c,p,0)));t.b("\" data-newnumber=\"");t.b(t.v(t.f("newNumber",c,p,0)));t.b("\">");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.v(t.f("content",c,p,0)));t.b("</td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("left.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.d("left.blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.v(t.f("content",c,p,0)));t.b("</td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("right.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.d("right.blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
+global.browserTemplates["wrapped-column-line-number"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\" data-appendnext=");t.b(t.v(t.f("appendNext",c,p,0)));t.b(" data-prevoldline=");t.b(t.v(t.f("prevOldLine",c,p,0)));t.b(" data-prevnewline=");t.b(t.v(t.f("prevNewLine",c,p,0)));t.b("\">");t.b(t.v(t.f("content",c,p,0)));t.b("</td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("left.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.d("left.blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\" data-appendnext=");t.b(t.v(t.f("appendNext",c,p,0)));t.b(" data-prevoldline=");t.b(t.v(t.f("prevOldLine",c,p,0)));t.b(" data-prevnewline=");t.b(t.v(t.f("prevNewLine",c,p,0)));t.b(">");t.b(t.v(t.f("content",c,p,0)));t.b("</td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("right.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.diffParser.LINE_TYPE.INFO",c,p,0)));t.b("\">");t.b(t.t(t.d("right.blockHeader",c,p,0)));t.b("</div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["wrapped-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("lineClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("      ");t.b(t.t(t.f("lineNumber",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.f("contentClass",c,p,0)));t.b(" ");t.b(t.v(t.f("type",c,p,0)));t.b("\">");t.b("\n" + i);if(t.s(t.f("prefix",c,p,1),c,p,0,171,247,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-prefix\">");t.b(t.t(t.f("prefix",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}if(t.s(t.f("content",c,p,1),c,p,0,279,361,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-wrapped-code-line-ctn\">");t.b(t.t(t.f("content",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 global.browserTemplates["wrapped-side-line"] = new Hogan.Template({code: function (c,p,i) { var t=this;t.b(i=i||"");t.b("<tr>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("      ");t.b(t.t(t.d("left.lineNumber",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("left.type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("left.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("left.type",c,p,0)));t.b("\">");t.b("\n" + i);if(t.s(t.d("left.prefix",c,p,1),c,p,0,206,287,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-prefix\">");t.b(t.t(t.d("left.prefix",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}if(t.s(t.d("left.content",c,p,1),c,p,0,329,416,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-wrapped-code-line-ctn\">");t.b(t.t(t.d("left.content",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.lineClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("      ");t.b(t.t(t.d("right.lineNumber",c,p,0)));t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("    <td class=\"");t.b(t.v(t.d("right.type",c,p,0)));t.b("\">");t.b("\n" + i);t.b("        <div class=\"");t.b(t.v(t.d("right.contentClass",c,p,0)));t.b(" ");t.b(t.v(t.d("right.type",c,p,0)));t.b("\">");t.b("\n" + i);if(t.s(t.d("right.prefix",c,p,1),c,p,0,667,749,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-code-line-prefix\">");t.b(t.t(t.d("right.prefix",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}if(t.s(t.d("right.content",c,p,1),c,p,0,793,881,"{{ }}")){t.rs(c,p,function(c,p,t){t.b("            <span class=\"d2h-wrapped-code-line-ctn\">");t.b(t.t(t.d("right.content",c,p,0)));t.b("</span>");t.b("\n" + i);});c.pop();}t.b("        </div>");t.b("\n" + i);t.b("    </td>");t.b("\n" + i);t.b("</tr>");return t.fl(); },partials: {}, subs: {  }});
 module.exports = global.browserTemplates;

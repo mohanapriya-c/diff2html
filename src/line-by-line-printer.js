@@ -73,22 +73,47 @@
     return Rematch.distance(amod, bmod);
   });
 
-  LineByLinePrinter.prototype.makeColumnLineNumberHtml = function(block) {
+  /*
+   * ZC-IMPL
+   * Generate line by line html for the given context lines
+   */
+  LineByLinePrinter.prototype.getContextLinesHtml = function(lines) {
+      var that = this;
+      var linesHtml = "";
+      lines.forEach(function(line) {
+        var escapedLine = utils.escape(line.content);
+        linesHtml += that.makeLineHtml(that.config.isCombined, diffParser.LINE_TYPE.CONTEXT, line.oldNumber, line.newNumber, escapedLine);          
+      });
+      return linesHtml;
+  };
+
+  LineByLinePrinter.prototype.makeColumnLineNumberHtml = function(block, appendNext, prevOldLine, prevNewLine) {
     return hoganUtils.render(genericTemplatesPath, 'column-line-number', {
       diffParser: diffParser,
-      blockHeader: utils.escape(block.header),
+      blockHeader: (block) ? utils.escape(block.header) : '',
       lineClass: 'd2h-code-linenumber',
-      contentClass: 'd2h-code-line'
+      contentClass: 'd2h-code-line',
+      appendNext: appendNext,
+      prevOldLine: prevOldLine,
+      prevNewLine: prevNewLine
     });
   };
 
   LineByLinePrinter.prototype._generateFileHtml = function(file) {
     var that = this;
-    return file.blocks.map(function(block) {
-      var lines = that.makeColumnLineNumberHtml(block);
+    var prevOldLine;
+    var prevNewLine;
+    return file.blocks.map(function(block, blockIndex) {
+      var lines = "";
       var oldLines = [];
       var newLines = [];
-
+      
+      if(parseInt(block.oldStartLine) !== 1) {
+          lines = that.makeColumnLineNumberHtml(block, false, prevOldLine, prevNewLine);
+      }
+      
+      prevOldLine = null;
+      prevNewLine = null;
       function processChangeBlock() {
         var matches;
         var insertType;
@@ -153,6 +178,10 @@
 
         if (line.type === diffParser.LINE_TYPE.CONTEXT) {
           lines += that.makeLineHtml(file.isCombined, line.type, line.oldNumber, line.newNumber, escapedLine);
+          if(file.blocks[file.blocks.length] === blockIndex) {
+            prevOldLine = line.oldNumber;
+            prevNewLine = line.newNumber;
+          }
         } else if (line.type === diffParser.LINE_TYPE.INSERTS && !oldLines.length) {
           lines += that.makeLineHtml(file.isCombined, line.type, line.oldNumber, line.newNumber, escapedLine);
         } else if (line.type === diffParser.LINE_TYPE.DELETES) {
@@ -166,7 +195,7 @@
       }
 
       processChangeBlock();
-
+      lines += that.makeColumnLineNumberHtml('', true, prevOldLine, prevNewLine);
       return lines;
     }).join('\n');
   };
