@@ -1,8 +1,8 @@
 <tr>
-    <td class="{{left.lineClass}} {{left.type}}" data-linenumber="{{left.lineNumber}}">
+    <td class="{{left.lineClass}} {{left.type}}" data-linenumber={{left.lineNumber}} data-side="left">
       {{{left.lineNumber}}}
     </td>
-    <td class="{{left.type}}">
+    <td class="{{left.type}}"  data-side="left">
         <div class="{{left.contentClass}} {{left.type}}">
         {{#left.prefix}}
             <span class="d2h-code-line-prefix">{{{left.prefix}}}</span>
@@ -12,10 +12,10 @@
         {{/left.content}}
         </div>
     </td>
-    <td class="{{right.lineClass}} {{right.type}}" data-linenumber="{{right.lineNumber}}">
+    <td class="{{right.lineClass}} {{right.type}}" data-linenumber={{right.lineNumber}} data-side="right">
       {{{right.lineNumber}}}
     </td>
-    <td class="{{right.type}}">
+    <td class="{{right.type}}" data-side="right">
         <div class="{{right.contentClass}} {{right.type}}">
         {{#right.prefix}}
             <span class="d2h-code-line-prefix">{{{right.prefix}}}</span>
