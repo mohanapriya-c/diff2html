@@ -5429,7 +5429,8 @@ module.exports = merge;
       file: file,
       fileHtmlId: printerUtils.getHtmlId(file),
       diffs: diffs,
-      filePath: filePathTemplate.render({
+      filePath: printerUtils.getDiffName(file),
+      filePathTemplate: filePathTemplate.render({
         fileDiffName: printerUtils.getDiffName(file)
       }, {
         fileIcon: fileIconTemplate,
@@ -6089,7 +6090,8 @@ module.exports = merge;
       file: file,
       fileHtmlId: printerUtils.getHtmlId(file),
       diffs: diffs,
-      filePath: filePathTemplate.render({
+      filePath: printerUtils.getDiffName(file),
+      filePathTemplate: filePathTemplate.render({
         fileDiffName: printerUtils.getDiffName(file)
       }, {
         fileIcon: fileIconTemplate,
