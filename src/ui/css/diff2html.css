@@ -89,6 +89,10 @@
   overflow-y: hidden;
 }
 
+.d2h-file-diff.d2h-wrapped-file-diff {
+  overflow: hidden;
+}
+
 .d2h-file-side-diff {
   display: inline-block;
   overflow-x: scroll;
@@ -100,8 +104,7 @@
 
 .d2h-wrapped-file-side-diff {
   display: inline-block;
-  overflow-x: scroll;
-  overflow-y: hidden;
+  overflow: hidden;
   width: 100%;
   margin-right: -4px;
   margin-bottom: -8px;
@@ -173,6 +176,7 @@
   padding: 0;
   word-wrap: normal;
   white-space: pre;
+  vertical-align: top;
 }
 
 .d2h-code-line-ctn {
@@ -184,9 +188,9 @@
 }
 
 .d2h-wrapped-code-line-ctn {
-  display: inline;
+  display: inline-block;
   background: none;
-  padding: 0;
+  padding: 0 10px;
   word-wrap: break-word;
   white-space: pre-wrap;
   line-height: 1.6;

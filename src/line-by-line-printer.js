@@ -38,6 +38,7 @@
       file: file,
       fileHtmlId: printerUtils.getHtmlId(file),
       diffs: diffs,
+      diffClass: (this.config.lineFolding) ? 'd2h-wrapped-file-diff' : '',
       filePath: printerUtils.getDiffName(file),
       filePathTemplate: filePathTemplate.render({
         fileDiffName: printerUtils.getDiffName(file)
