@@ -90,11 +90,12 @@
   };
 
   LineByLinePrinter.prototype.makeColumnLineNumberHtml = function(block, appendNext, prevOldLine, prevNewLine) {
+    var lineFolding = this.config.lineFolding;
     return hoganUtils.render(genericTemplatesPath, 'column-line-number', {
       diffParser: diffParser,
       blockHeader: (block) ? utils.escape(block.header) : '',
-      lineClass: 'd2h-code-linenumber',
-      contentClass: 'd2h-code-line',
+      lineClass: (lineFolding) ? 'd2h-wrapped-code-linenumber' : 'd2h-code-linenumber',
+      contentClass: (lineFolding) ? 'd2h-wrapped-code-line' : 'd2h-code-line',
       appendNext: appendNext,
       prevOldLine: prevOldLine,
       prevNewLine: prevNewLine
