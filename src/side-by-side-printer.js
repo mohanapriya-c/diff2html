@@ -150,7 +150,7 @@
     }
 
     file.blocks.forEach(function(block) {
-      if(parseInt(block.oldStartLine) !== 1) {
+      if(parseInt(block.newStartLine) !== 1) {
           if (lineFolding) {
             fileHtml += that.makeWrappedSideHtml({ content: block.header }, { content: "" }, false, prevOldLine, prevNewLine);
           } else {

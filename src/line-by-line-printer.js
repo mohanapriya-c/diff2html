@@ -111,7 +111,7 @@
       var oldLines = [];
       var newLines = [];
       
-      if(parseInt(block.oldStartLine) !== 1) {
+      if(parseInt(block.newStartLine) !== 1) {
           lines = that.makeColumnLineNumberHtml(block, false, prevOldLine, prevNewLine);
       }
       
