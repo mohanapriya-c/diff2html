@@ -14,12 +14,17 @@
   }
 
   var defaultConfig = {
-    wordByWord: true,
+    inputFormat: 'diff',
     outputFormat: 'line-by-line',
+    showFiles: false,
+    diffStyle: 'word',
     matching: 'none',
     matchWordsThreshold: 0.25,
     matchingMaxComparisons: 2500,
+    maxLineSizeInBlockForComparison: 200,
     maxLineLengthHighlight: 10000,
+    templates: {},
+    rawTemplates: {},
     renderNothingWhenEmpty: false
   };
 

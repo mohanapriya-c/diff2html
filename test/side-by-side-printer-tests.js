@@ -84,7 +84,7 @@ describe('SideBySidePrinter', function() {
         '    </td>\n' +
         '    <td class="d2h-cntx">\n' +
         '        <div class="d2h-code-side-line d2h-cntx">\n' +
-        '            <span class="d2h-code-line-prefix"> </span>\n' +
+        '            <span class="d2h-code-line-prefix">&nbsp;</span>\n' +
         '            <span class="d2h-code-line-ctn">context</span>\n' +
         '        </div>\n' +
         '    </td>\n' +
@@ -105,6 +105,8 @@ describe('SideBySidePrinter', function() {
         '    </td>\n' +
         '    <td class="d2h-cntx d2h-emptyplaceholder">\n' +
         '        <div class="d2h-code-side-line d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder">\n' +
+        '            <span class="d2h-code-line-prefix">&nbsp;</span>\n' +
+        '            <span class="d2h-code-line-ctn">&nbsp;</span>\n' +
         '        </div>\n' +
         '    </td>\n' +
         '</tr>';
@@ -121,7 +123,7 @@ describe('SideBySidePrinter', function() {
         '    </td>\n' +
         '    <td class="d2h-cntx">\n' +
         '        <div class="d2h-code-side-line d2h-cntx">\n' +
-        '            <span class="d2h-code-line-prefix"> </span>\n' +
+        '            <span class="d2h-code-line-prefix">&nbsp;</span>\n' +
         '            <span class="d2h-code-line-ctn">context</span>\n' +
         '        </div>\n' +
         '    </td>\n' +
@@ -253,11 +255,11 @@ describe('SideBySidePrinter', function() {
         '        <div class="d2h-code-side-line d2h-info">@@ -1 +1 @@</div>\n' +
         '    </td>\n' +
         '</tr><tr>\n' +
-        '    <td class="d2h-code-side-linenumber d2h-del d2h-change">\n' +
+        '    <td class="d2h-code-side-linenumber d2h-del">\n' +
         '      1\n' +
         '    </td>\n' +
-        '    <td class="d2h-del d2h-change">\n' +
-        '        <div class="d2h-code-side-line d2h-del d2h-change">\n' +
+        '    <td class="d2h-del">\n' +
+        '        <div class="d2h-code-side-line d2h-del">\n' +
         '            <span class="d2h-code-line-prefix">-</span>\n' +
         '            <span class="d2h-code-line-ctn"><del>test</del></span>\n' +
         '        </div>\n' +
@@ -277,11 +279,11 @@ describe('SideBySidePrinter', function() {
         '        <div class="d2h-code-side-line d2h-info"></div>\n' +
         '    </td>\n' +
         '</tr><tr>\n' +
-        '    <td class="d2h-code-side-linenumber d2h-ins d2h-change">\n' +
+        '    <td class="d2h-code-side-linenumber d2h-ins">\n' +
         '      1\n' +
         '    </td>\n' +
-        '    <td class="d2h-ins d2h-change">\n' +
-        '        <div class="d2h-code-side-line d2h-ins d2h-change">\n' +
+        '    <td class="d2h-ins">\n' +
+        '        <div class="d2h-code-side-line d2h-ins">\n' +
         '            <span class="d2h-code-line-prefix">+</span>\n' +
         '            <span class="d2h-code-line-ctn"><ins>test1r</ins></span>\n' +
         '        </div>\n' +

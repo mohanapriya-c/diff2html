@@ -170,9 +170,14 @@
         var deleteType;
 
         var comparisons = oldLines.length * newLines.length;
-        var maxComparisons = that.config.matchingMaxComparisons || 2500;
-        var doMatching = comparisons < maxComparisons && (that.config.matching === 'lines' ||
-          that.config.matching === 'words');
+
+        var maxLineSizeInBlock = Math.max.apply(null, (oldLines.concat(newLines)).map(function(elem) {
+          return elem.length;
+        }));
+
+        var doMatching = comparisons < that.config.matchingMaxComparisons &&
+          maxLineSizeInBlock < that.config.maxLineSizeInBlockForComparison &&
+          (that.config.matching === 'lines' || that.config.matching === 'words');
 
         if (doMatching) {
           matches = matcher(oldLines, newLines);
@@ -420,12 +425,16 @@
       lineClass += ' d2h-code-side-emptyplaceholder';
       contentClass += ' d2h-code-side-emptyplaceholder';
       type += ' d2h-emptyplaceholder';
-    }
-
-    if (!prefix) {
+      prefix = '&nbsp;';
+      lineWithoutPrefix = '&nbsp;';
+    } else if (!prefix) {
       var lineWithPrefix = printerUtils.separatePrefix(isCombined, content);
       prefix = lineWithPrefix.prefix;
       lineWithoutPrefix = lineWithPrefix.line;
+    }
+
+    if (prefix === ' ') {
+      prefix = '&nbsp;';
     }
 
     return hoganUtils.render(genericTemplatesPath, 'line',

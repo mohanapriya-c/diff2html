@@ -6,14 +6,18 @@
 declare namespace Diff2Html {
 
   export interface Options {
-    inputFormat?: string;
-    outputFormat?: string;
+    inputFormat?: 'diff' | 'json';
+    outputFormat?: 'line-by-line' | 'side-by-side';
     showFiles?: boolean;
-    matching?: string;
-    synchronisedScroll?: boolean;
+    diffStyle?: 'word' | 'char';
+    matching?: 'lines' | 'words' | 'none';
     matchWordsThreshold?: number;
     matchingMaxComparisons?: number;
+    maxLineSizeInBlockForComparison?: number;
     maxLineLengthHighlight?: number;
+    templates?: object;
+    rawTemplates?: object;
+    renderNothingWhenEmpty?: boolean;
   }
 
   export interface Line {

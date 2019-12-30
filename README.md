@@ -8,10 +8,12 @@
 [![npm](https://img.shields.io/npm/v/diff2html.svg)](https://www.npmjs.com/package/diff2html)
 [![Dependency Status](https://david-dm.org/rtfpessoa/diff2html.svg)](https://david-dm.org/rtfpessoa/diff2html)
 [![devDependency Status](https://david-dm.org/rtfpessoa/diff2html/dev-status.svg)](https://david-dm.org/rtfpessoa/diff2html#info=devDependencies)
+[![cdnjs](https://img.shields.io/cdnjs/v/diff2html)](https://cdnjs.com/libraries/diff2html)
 
 [![node](https://img.shields.io/node/v/diff2html.svg)]()
 [![npm](https://img.shields.io/npm/l/diff2html.svg)]()
 [![npm](https://img.shields.io/npm/dm/diff2html.svg)](https://www.npmjs.com/package/diff2html)
+[![All Contributors](https://img.shields.io/badge/all_contributors-22-orange.svg?style=flat-square)](#contributors-)
 [![Gitter](https://badges.gitter.im/rtfpessoa/diff2html.svg)](https://gitter.im/rtfpessoa/diff2html?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 diff2html generates pretty HTML diffs from git or unified diff output.
@@ -50,9 +52,20 @@ diff2html generates pretty HTML diffs from git or unified diff output.
 
 * [Node CLI](https://www.npmjs.org/package/diff2html-cli)
 
-* Manually download and import `dist/diff2html.min.js` into your page
+* Manually download and import [dist/diff2html.min.js](./dist/diff2html.min.js) into your page
 
 ## How to use
+
+To load correctly in the Browser you always need to include the stylesheet in the final HTML.
+
+Import the stylesheet
+
+```html
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="dist/diff2html.css">
+```
+
+You can also refer to it from a CDN like [CDNJS](https://cdnjs.com/libraries/diff2html).
 
 ### Browser Library
 
@@ -172,9 +185,9 @@ export default {
 
     getPrettyHtml(input: any, configuration?: Options): string
 
-> Check out the `typescript/diff2html.d.ts` for a complete API definition in TypeScript.
+> Check out the [src/diff2html.d.ts](./src/diff2html.d.ts) for a complete API definition in TypeScript.
 
-> Check out the `docs/demo.html` for a demo example.
+> Check out the [docs/demo.html](./docs/demo.html) for a demo example.
 
 ## Configuration
 The HTML output accepts a Javascript object with configuration. Possible options:
@@ -182,9 +195,11 @@ The HTML output accepts a Javascript object with configuration. Possible options
   - `inputFormat`: the format of the input data: `'diff'` or `'json'`, default is `'diff'`
   - `outputFormat`: the format of the output data: `'line-by-line'` or `'side-by-side'`, default is `'line-by-line'`
   - `showFiles`: show a file list before the diff: `true` or `false`, default is `false`
+  - `diffStyle`: show differences level in each line: `word` or `char`, default is `word`
   - `matching`: matching level: `'lines'` for matching lines, `'words'` for matching lines and words or `'none'`, default is `none`
   - `matchWordsThreshold`: similarity threshold for word matching, default is 0.25
   - `matchingMaxComparisons`: perform at most this much comparisons for line matching a block of changes, default is `2500`
+  - `maxLineSizeInBlockForComparison`: maximum number os characters of the bigger line in a block to apply comparison, default is `200`
   - `maxLineLengthHighlight`: only perform diff changes highlight if lines are smaller than this, default is `10000`
   - `templates`: object with previously compiled templates to replace parts of the html
   - `rawTemplates`: object with raw not compiled templates to replace parts of the html
@@ -297,6 +312,52 @@ $(document).ready(function() {
 This is a developer friendly project, all the contributions are welcome.
 To contribute just send a pull request with your changes following the guidelines described in `CONTRIBUTING.md`.
 I will try to review them as soon as possible.
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://rtfpessoa.xyz"><img src="https://avatars0.githubusercontent.com/u/902384?v=4" width="100px;" alt="Rodrigo Fernandes"/><br /><sub><b>Rodrigo Fernandes</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=rtfpessoa" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/stockmind"><img src="https://avatars3.githubusercontent.com/u/5653847?v=4" width="100px;" alt="stockmind"/><br /><sub><b>stockmind</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=stockmind" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/lantian"><img src="https://avatars3.githubusercontent.com/u/535545?v=4" width="100px;" alt="Ivan Vorontsov"/><br /><sub><b>Ivan Vorontsov</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=lantian" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.nick-brewer.com"><img src="https://avatars1.githubusercontent.com/u/129300?v=4" width="100px;" alt="Nick Brewer"/><br /><sub><b>Nick Brewer</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=brewern" title="Code">💻</a></td>
+    <td align="center"><a href="http://heyitsmattwade.com"><img src="https://avatars0.githubusercontent.com/u/8504000?v=4" width="100px;" alt="Matt Wade"/><br /><sub><b>Matt Wade</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Aromellem" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="http://mrfyda.github.io"><img src="https://avatars1.githubusercontent.com/u/593860?v=4" width="100px;" alt="Rafael Cortês"/><br /><sub><b>Rafael Cortês</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=mrfyda" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/nmatpt"><img src="https://avatars2.githubusercontent.com/u/5034733?v=4" width="100px;" alt="Nuno Teixeira"/><br /><sub><b>Nuno Teixeira</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=nmatpt" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://saino.me/"><img src="https://avatars0.githubusercontent.com/u/1567423?v=4" width="100px;" alt="Koki Oyatsu"/><br /><sub><b>Koki Oyatsu</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Akaishuu0123" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="http://www.jamesmonger.com"><img src="https://avatars2.githubusercontent.com/u/2037007?v=4" width="100px;" alt="James Monger"/><br /><sub><b>James Monger</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=Jameskmonger" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://wesssel.github.io/"><img src="https://avatars2.githubusercontent.com/u/7767299?v=4" width="100px;" alt="Wessel van der Pal"/><br /><sub><b>Wessel van der Pal</b></sub></a><br /><a href="#security-wesssel" title="Security">🛡️</a></td>
+    <td align="center"><a href="https://jung-kim.github.io"><img src="https://avatars2.githubusercontent.com/u/5281068?v=4" width="100px;" alt="jk-kim"/><br /><sub><b>jk-kim</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=jung-kim" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/sss0791"><img src="https://avatars1.githubusercontent.com/u/1446970?v=4" width="100px;" alt="Sergey Semenov"/><br /><sub><b>Sergey Semenov</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Asss0791" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="http://researcher.watson.ibm.com/researcher/view.php?person=us-nickm"><img src="https://avatars3.githubusercontent.com/u/4741620?v=4" width="100px;" alt="Nick Mitchell"/><br /><sub><b>Nick Mitchell</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Astarpit" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="https://github.com/samiraguiar"><img src="https://avatars0.githubusercontent.com/u/13439135?v=4" width="100px;" alt="Samir Aguiar"/><br /><sub><b>Samir Aguiar</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=samiraguiar" title="Documentation">📖</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://twitter.com/pubkeypubkey"><img src="https://avatars3.githubusercontent.com/u/8926560?v=4" width="100px;" alt="pubkey"/><br /><sub><b>pubkey</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=pubkey" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/iliyaZelenko"><img src="https://avatars1.githubusercontent.com/u/13103045?v=4" width="100px;" alt="Илья"/><br /><sub><b>Илья</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=iliyaZelenko" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://akr.am"><img src="https://avatars0.githubusercontent.com/u/1823771?v=4" width="100px;" alt="Mohamed Akram"/><br /><sub><b>Mohamed Akram</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Amohd-akram" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="https://github.com/emarcotte"><img src="https://avatars0.githubusercontent.com/u/249390?v=4" width="100px;" alt="Eugene Marcotte"/><br /><sub><b>Eugene Marcotte</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=emarcotte" title="Code">💻</a></td>
+    <td align="center"><a href="http://twitter.com/dimasabanin"><img src="https://avatars0.githubusercontent.com/u/8316?v=4" width="100px;" alt="Dima Sabanin"/><br /><sub><b>Dima Sabanin</b></sub></a><br /><a href="#maintenance-dsabanin" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/benabbottnz"><img src="https://avatars2.githubusercontent.com/u/2616473?v=4" width="100px;" alt="Ben Abbott"/><br /><sub><b>Ben Abbott</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/commits?author=benabbottnz" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://webminer.js.org"><img src="https://avatars1.githubusercontent.com/u/2196373?v=4" width="100px;" alt="弘树@阿里"/><br /><sub><b>弘树@阿里</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3Adickeylth" title="Bug reports">🐛</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/Rantanen"><img src="https://avatars0.githubusercontent.com/u/385385?v=4" width="100px;" alt="Mikko Rantanen"/><br /><sub><b>Mikko Rantanen</b></sub></a><br /><a href="https://github.com/rtfpessoa/diff2html/issues?q=author%3ARantanen" title="Bug reports">🐛</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
 
 ## License
 
